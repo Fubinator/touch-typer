@@ -1,38 +1,52 @@
 use rand::seq::SliceRandom;
 use std::io::stdin;
 use std::time::Instant;
-use termion::{color};
+use termion::color;
+
+struct Game {
+    words: Vec<String>,
+    time: std::time::Instant,
+    input: String,
+}
+
+impl Game {
+    fn run(&mut self) {
+        let mut garbage = String::new();
+        println!("Type these words correctly as fast as you can.");
+
+        println!("\n{}\n", self.words.join(" "));
+        stdin()
+            .read_line(&mut garbage)
+            .expect("Did not enter a correct string");
+
+        stdin()
+            .read_line(&mut self.input)
+            .expect("Did not enter a correct string");
+
+        if self.input.trim() != self.words.join(" ") {
+            println!("\nYou have mistyped somewhere. Please try again.");
+        } else {
+            println!("\nElapsed time: {:.2?}", self.time.elapsed());
+            println!(
+                "Words per minute: {:.2?}",
+                10.0 / (self.time.elapsed().as_millis() as f64 / 60.0) * 1000.0
+            );
+        }
+    }
+}
 
 fn main() {
-    let timer = Instant::now();
-    let mut garbage = String::new();
-    let mut input = String::new();
-
-    let random_words = get_random_words(10);
+    let mut game = Game {
+        words: get_random_words(10),
+        time: Instant::now(),
+        input: String::new(),
+    };
 
     println!("{}", color::Fg(color::Blue));
     println!("{}", get_intro_screen());
     println!("{}", color::Fg(color::White));
-    println!("Type these words correctly as fast as you can.");
 
-    println!("\n{}\n", random_words.join(" "));
-    stdin()
-        .read_line(&mut garbage)
-        .expect("Did not enter a correct string");
-
-    stdin()
-        .read_line(&mut input)
-        .expect("Did not enter a correct string");
-
-    if input.trim() != random_words.join(" ") {
-        println!("\nYou have mistyped somewhere. Please try again.");
-    } else {
-        println!("\nElapsed time: {:.2?}", timer.elapsed());
-        println!(
-            "Words per minute: {:.2?}",
-            10.0 / (timer.elapsed().as_millis() as f64 / 60.0) * 1000.0
-        );
-    }
+    game.run()
 }
 
 fn get_intro_screen() -> String {
