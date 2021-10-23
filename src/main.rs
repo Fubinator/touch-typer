@@ -11,10 +11,27 @@ struct Game {
 
 impl Game {
     fn run(&mut self) {
-        let mut garbage = String::new();
-        println!("Type these words correctly as fast as you can.");
+        self.intro();
 
-        println!("\n{}\n", self.words.join(" "));
+        self.game_loop();
+
+        self.result()
+    }
+
+    fn intro(&self) {
+        println!("Type these words correctly as fast you can.");
+        println!(
+            "{}\n{}\n{}",
+            color::Fg(color::Blue),
+            self.words.join(" "),
+            color::Fg(color::White)
+        );
+        println!("Begin typing to start...\n");
+    }
+
+    fn game_loop(&mut self) {
+        let mut garbage = String::new();
+
         stdin()
             .read_line(&mut garbage)
             .expect("Did not enter a correct string");
@@ -22,7 +39,9 @@ impl Game {
         stdin()
             .read_line(&mut self.input)
             .expect("Did not enter a correct string");
+    }
 
+    fn result(&self) {
         if self.input.trim() != self.words.join(" ") {
             println!("\nYou have mistyped somewhere. Please try again.");
         } else {
