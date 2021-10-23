@@ -50,6 +50,7 @@ impl Game {
                         " ",
                         termion::cursor::Goto(x - 1, y)
                     );
+                    self.input.pop();
                 }
                 termion::event::Key::Char(k) => {
                     self.input.push(k);
