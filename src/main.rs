@@ -1,7 +1,12 @@
 use rand::seq::SliceRandom;
-use std::io::stdin;
+use std::io;
+use std::io::Write;
 use std::time::Instant;
+use termion;
 use termion::color;
+use termion::cursor::DetectCursorPos;
+use termion::input::TermRead;
+use termion::raw::IntoRawMode;
 
 struct Game {
     words: Vec<String>,
@@ -30,15 +35,35 @@ impl Game {
     }
 
     fn game_loop(&mut self) {
-        let mut garbage = String::new();
+        let stdin = io::stdin();
+        let terminal = io::stdout().into_raw_mode();
+        let mut stdout = terminal.unwrap();
 
-        stdin()
-            .read_line(&mut garbage)
-            .expect("Did not enter a correct string");
+        for c in stdin.keys() {
+            match c.unwrap() {
+                termion::event::Key::Backspace => {
+                    let (x, y) = stdout.cursor_pos().unwrap();
+                    write!(
+                        stdout,
+                        "{}{}{}",
+                        termion::cursor::Goto(x - 1, y),
+                        " ",
+                        termion::cursor::Goto(x - 1, y)
+                    );
+                }
+                termion::event::Key::Char(k) => {
+                    self.input.push(k);
 
-        stdin()
-            .read_line(&mut self.input)
-            .expect("Did not enter a correct string");
+                    write!(stdout, "{}", k);
+                }
+                _ => break,
+            }
+            stdout.flush().unwrap();
+
+            if self.input == self.words.join(" ") {
+                break;
+            }
+        }
     }
 
     fn result(&self) {
