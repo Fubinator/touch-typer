@@ -10,7 +10,7 @@ use termion::raw::IntoRawMode;
 
 struct Game {
     words: Vec<String>,
-    time: std::time::Instant,
+    time: Option<std::time::Duration>,
     input: String,
 }
 
@@ -37,9 +37,16 @@ impl Game {
     fn game_loop(&mut self) {
         let stdin = io::stdin();
         let terminal = io::stdout().into_raw_mode();
+        let mut is_running = false;
         let mut stdout = terminal.unwrap();
+        let mut time: Option<Instant> = None;
 
         for c in stdin.keys() {
+            if !is_running {
+                is_running = true;
+                time = Some(Instant::now());
+            }
+
             match c.unwrap() {
                 termion::event::Key::Backspace => {
                     let (x, y) = stdout.cursor_pos().unwrap();
@@ -62,6 +69,10 @@ impl Game {
             stdout.flush().unwrap();
 
             if self.input == self.words.join(" ") {
+                match time {
+                    Some(timer) => self.time = Some(timer.elapsed()),
+                    None => {}
+                }
                 break;
             }
         }
@@ -71,11 +82,16 @@ impl Game {
         if self.input.trim() != self.words.join(" ") {
             println!("\nYou have mistyped somewhere. Please try again.");
         } else {
-            println!("\nElapsed time: {:.2?}", self.time.elapsed());
-            println!(
-                "Words per minute: {:.2?}",
-                10.0 / (self.time.elapsed().as_millis() as f64 / 60.0) * 1000.0
-            );
+            match self.time {
+                Some(timer) => {
+                    println!("\nElapsed time: {:.2?}", timer);
+                    println!(
+                        "Words per minute: {:.2?}",
+                        10.0 / (timer.as_millis() as f64 / 60.0) * 1000.0
+                    );
+                }
+                None => {}
+            }
         }
     }
 }
@@ -83,7 +99,7 @@ impl Game {
 fn main() {
     let mut game = Game {
         words: get_random_words(10),
-        time: Instant::now(),
+        time: None,
         input: String::new(),
     };
 
